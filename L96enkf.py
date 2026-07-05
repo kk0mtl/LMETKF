@@ -1175,17 +1175,17 @@ if __name__ == "__main__":
 
 
     # [GETKF] LETKF, GETKF (with modulated ensemble) 
-    errstddev = 1.0                                 # observation error standard deviation
+    errstddev = 0.1                                 # observation error standard deviation
     cov_infl_method = -1           
     cov_infl_par1 = 0.2    
     
-    enkf_method_list = [17]                         # 3: LETKF (with observation space horizontal covariance localization; R localization), 17: GETKF (with modulated ensemble for model space vertical covariance localization; B localization), 18: MLETKF (with modulated ensemble for mean updatae (B localization) and LETKF based perturbation update (R localizationi) 
+    enkf_method_list = [18]                         # 3: LETKF (with observation space horizontal covariance localization; R localization), 17: GETKF (with modulated ensemble for model space vertical covariance localization; B localization), 18: LMETKF (with modulated ensemble for mean updatae (B localization) and LETKF based perturbation update (R localizationi) 
     
     #nem_list = np.arange(2,10,1).tolist() + np.arange(10,110,10).tolist()
     nem_list = [50]
 
-    cov_loc_dist = 3                                 # background covariance localization distance
-    cov_loc_dist_pert = None                         # for Z-loc perturbation (Set to None if Z-loc is not used)
+    cov_loc_dist = 3                                # background covariance localization distance
+    cov_loc_dist_pert = 3                         # for Z-loc perturbation (Set to None if Z-loc is not used)
 
     #obs_loc_dist = np.arange(1,11,1).tolist()       # for LETKF and LMETKF (with modulated ensemble)                             
     obs_loc_dist = [1.5]                             # observation localization distance
@@ -1193,7 +1193,7 @@ if __name__ == "__main__":
     #row_rank_thresh =np.arange(0.1,1.0,0.1).tolist()  # for localization matrix
     row_rank_thresh = [0.8]
 
-    mpi = True
+    mpi = False
     
     for h_type in [2]:                               # 0: linear, 1: nonlinear (absolute value), 2: nonlinear (natural log)
         for nobs in [40]:                           # number of observations

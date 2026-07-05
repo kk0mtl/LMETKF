@@ -2,6 +2,9 @@ import numpy as np
 import sys
 from scipy.linalg import eigh, cho_solve, cho_factor, svd, pinvh, solve_triangular, cholesky
 import scipy.stats as stats
+import os
+from matplotlib.colors import TwoSlopeNorm
+import matplotlib.pyplot as plt
 
 def ks_test_normal_dist(x, alpha = 0.05):
     """
@@ -91,6 +94,49 @@ def syminv_psd(a):
         
     return inv
 
+def corr_from_cov(P, eps=1e-12):
+    # covariance matrix -> correlation matrix
+    std = np.sqrt(np.diag(P))
+    denom = np.outer(std, std)
+    C = P / (denom + eps)
+    return np.clip(C, -1.0, 1.0)
+
+def cov_from_xptb(xptb):
+    nems = xptb.shape[0]
+    return (xptb.T @ xptb) / (nems - 1.0)
+
+def plot_pb_pair_corr(Pb_raw, Pb_loc, savepath):
+    Cb_raw  = corr_from_cov(Pb_raw)
+    Cb_star = corr_from_cov(Pb_loc)
+
+    norm = TwoSlopeNorm(vmin=-1.0, vcenter=0.0, vmax=1.0)
+
+    fig, axes = plt.subplots(1, 2, figsize=(10, 4))
+
+    im0 = axes[0].imshow(
+        Cb_raw,
+        origin="lower",
+        aspect="auto",
+        cmap="RdBu_r",
+        norm=norm
+    )
+    axes[0].set_title("Correlation of P^b")
+    plt.colorbar(im0, ax=axes[0], fraction=0.046, pad=0.04)
+
+    im1 = axes[1].imshow(
+        Cb_star,
+        origin="lower",
+        aspect="auto",
+        cmap="RdBu_r",
+        norm=norm
+    )
+    axes[1].set_title("Correlation of P^b_loc")
+    plt.colorbar(im1, ax=axes[1], fraction=0.046, pad=0.04)
+
+    plt.tight_layout()
+    plt.savefig(savepath, dpi=200, bbox_inches="tight")
+    plt.close()
+
 def letkf(xmean, xptb, h, h_type, obs, obs_r, obs_rloc, mpi, comm, myrank):
     """LETKF (with R-localization)"""
 
@@ -147,9 +193,14 @@ def getkf_modens(xmean, xptb, h, h_type, obs, obs_r, z):
     nems, ndim = xptb.shape
     nobs = obs.shape[-1]
     svd_calc = True
+    debug_plot = False
     
     if z is None:
         raise ValueError('z not specified')                                         # z = W^T
+    
+    if debug_plot:
+        os.makedirs("./", exist_ok=True)
+        Pb_raw = cov_from_xptb(xptb)
         
     # modulation ensemble
     neig = z.shape[0]                                                               # number of eigenvalues
@@ -165,6 +216,16 @@ def getkf_modens(xmean, xptb, h, h_type, obs, obs_r, z):
             iens_modens += 1
             
     xptb_modens = np.sqrt(float(nems_modens-1)/float(nems-1))*xptb_modens
+
+    if debug_plot:
+        output_dir = "./fig_correlation_matrix"
+        os.makedirs(output_dir, exist_ok=True)
+
+        if output_dir:
+            os.makedirs(output_dir, exist_ok=True)
+
+        Pb_loc = cov_from_xptb(xptb_modens)
+        plot_pb_pair_corr(Pb_raw,Pb_loc,os.path.join(output_dir, "Bloc_Corr_Pb_raw_and_Pb_loc.png"))
         
     # data assimilation
     if h_type == 0:                                                                 # linear h(x)=x (for simulation)
@@ -236,12 +297,13 @@ def getkf_modens(xmean, xptb, h, h_type, obs, obs_r, z):
     return xmean, xptb, 1.
 
 def lmetkf(xmean, xptb, h, h_type, obs, obs_r, locmtx, obs_rloc, z, mpi=False, comm=None, myrank=None, obs_dist=None, locmtx_pert=None):
-    """lmetkf (mean with B-localization & perturbation update with R-localization / Z-localization)"""
+    """LMETKF (mean with B-localization & perturbation update with R-localization / Z-localization)"""
     nems, ndim = xptb.shape
     nobs = obs.shape[-1]
     svd_calc = True        # True: singular value decomposition, False: eigenvalue decomposition
     noLoc = False          # True: LMETKF-noLoc, False: LMETKF
     use_zloc = False       # True: use Z-localization for perturbation update, False: use R-localization for perturbation update
+    debug_plot = False
 
     if z is None:
         raise ValueError('z not specified')                                         # z = W^T
@@ -341,12 +403,24 @@ def lmetkf(xmean, xptb, h, h_type, obs, obs_r, locmtx, obs_rloc, z, mpi=False, c
             xptb_T = np.empty((ndim,nems), float)
             tmp_xptb = np.zeros(nems, dtype=xptb.dtype)
             n = myrank
+            n0 = 39  # reference grid point for the debug plot
+
             if n < ndim:
                 rho = obs_rloc[n, :]
                 if use_zloc:
                     rho = locmtx_pert[n, :]
                     xptb_star = xptb * np.sqrt(rho)[None, :]
                     x_star = xmean_b + xptb_star         # reconstruct ensemble members
+
+                    # Plot the correlation matrices only at grid point n0.
+                    if debug_plot and n == n0:
+                        output_dir = "./fig_correlation_matrix"
+                        os.makedirs(output_dir, exist_ok=True)
+
+                        Pb_raw = cov_from_xptb(xptb)
+                        Pb_star = cov_from_xptb(xptb_star)
+
+                        plot_pb_pair_corr(Pb_raw, Pb_star, savepath=os.path.join(output_dir, f"Zloc_Corr_Pb_check_n{n0}.png"))
 
                     # nonlinear observation operator is reapplied to the modified ensemble members
                     Z_star = np.empty((nems, nobs), dtype=xptb.dtype)
@@ -376,5 +450,55 @@ def lmetkf(xmean, xptb, h, h_type, obs, obs_r, locmtx, obs_rloc, z, mpi=False, c
 
             comm.Allgather(tmp_xptb, xptb_T)
             xptb = xptb_T.T
+
+        else:
+            xptb_new = np.empty_like(xptb)
+            n0 = 30  # reference grid point for the debug plot
+
+            if debug_plot and use_zloc:
+                output_dir = "./fig_correlation_matrix"
+                os.makedirs(output_dir, exist_ok=True)
+                Pb_raw = cov_from_xptb(xptb)
+
+            for n in range(ndim):
+                if use_zloc:
+                    rho = locmtx_pert[n, :]
+                    xptb_star = xptb * np.sqrt(rho)[None, :]
+                    x_star = xmean_b + xptb_star
+
+                    # Plot the correlation matrices only at grid point n0.
+                    if debug_plot and n == n0:
+                        Pb_star = cov_from_xptb(xptb_star)
+
+                        plot_pb_pair_corr(Pb_raw, Pb_star, savepath=os.path.join(output_dir, f"Zloc_Corr_Pb_check_n{n0}.png"))
+
+                    Z_star = np.empty((nems, nobs), dtype=xptb.dtype)
+
+                    for iens in range(nems):
+                        y = h @ x_star[iens]
+                        Z_star[iens] = nonlinear_h(y, h_type)
+
+                    ymean_star = np.mean(Z_star, axis=0)
+                    zptb_star = Z_star - ymean_star[None, :]
+
+                    Rinv = 1.0 / obs_r
+                    C = zptb_star * Rinv
+                    A = ((nems - 1) * np.eye(nems)+ np.dot(C, zptb_star.T))
+
+                    sqrt_pa, _ = symsqrtinv_psd(A)
+                    Wa = np.sqrt(nems - 1) * sqrt_pa
+
+                    xptb_new[:, n] = np.dot(Wa.T, xptb_star[:, n])
+
+                else:
+                    weight = obs_rloc[n, :] / obs_r
+                    C = zptb * weight
+
+                    sqrt_pa, _ = symsqrtinv_psd((nems - 1) * np.eye(nems)+ np.dot(C, zptb.T))
+
+                    Wa = np.sqrt(nems - 1) * sqrt_pa
+                    xptb_new[:, n] = np.dot(Wa.T, xptb[:, n])
+
+            xptb = xptb_new
 
     return xmean, xptb, 1.
