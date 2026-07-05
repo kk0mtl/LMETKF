@@ -98,9 +98,9 @@ fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(8, 6), sharex=True)
 # FIG. 8(a) : Background RMSE =========================
 ax1.plot(nem, rmse_b_letkf, marker='o', label='LETKF', color=colors[0])
 ax1.plot(nem, rmse_b_getkf, marker='o', label='GETKF', color=colors[1])
-ax1.plot(nem, rmse_b_lmetkf_no_loc, marker='o', label='MLETKF-noLoc', color=colors[2])
-ax1.plot(nem, rmse_b_lmetkf, marker='o', label='MLETKF', color=colors[3])
-ax1.plot(nem, rmse_b_lmetkf_zloc, marker='o', label='MLETKF-Z', color=colors[4])
+ax1.plot(nem, rmse_b_lmetkf_no_loc, marker='o', label='LMETKF-noLoc', color=colors[2])
+ax1.plot(nem, rmse_b_lmetkf, marker='o', label='LMETKF', color=colors[3])
+ax1.plot(nem, rmse_b_lmetkf_zloc, marker='o', label='LMETKF-Z', color=colors[4])
 
 ax1.grid(True, alpha=0.3)
 ax1.set_ylabel("RMSE")
@@ -119,9 +119,9 @@ ax1.legend(loc="upper right",
 # FIG. 8(b) : Background spread =========================
 ax2.plot(nem, sprd_b_letkf, marker='o', label='LETKF', color=colors[0])
 ax2.plot(nem, sprd_b_getkf, marker='o', label='GETKF', color=colors[1])
-ax2.plot(nem, sprd_b_lmetkf_no_loc, marker='o', label='MLETKF-noLoc', color=colors[2])
-ax2.plot(nem, sprd_b_lmetkf, marker='o', label='MLETKF', color=colors[3])
-ax2.plot(nem, sprd_b_lmetkf_zloc, marker='o', label='MLETKF-Z', color=colors[4])
+ax2.plot(nem, sprd_b_lmetkf_no_loc, marker='o', label='LMETKF-noLoc', color=colors[2])
+ax2.plot(nem, sprd_b_lmetkf, marker='o', label='LMETKF', color=colors[3])
+ax2.plot(nem, sprd_b_lmetkf_zloc, marker='o', label='LMETKF-Z', color=colors[4])
 
 ax2.set_ylabel("Spread")
 ax2.set_xlabel("Ensemble size")
@@ -144,9 +144,9 @@ plt.figure(figsize=(8, 6))
 
 plt.plot(nem, t_letkf, marker='o', label='LETKF', color=colors[0])
 plt.plot(nem, t_getkf, marker='o', label='GETKF', color=colors[1])
-plt.plot(nem, t_lmetkf_no_loc, marker='o', label='MLETKF-noLoc', color=colors[2])
-plt.plot(nem, t_lmetkf, marker='o', label='MLETKF', color=colors[3])
-plt.plot(nem, t_lmetkf_zloc, marker='o', label='MLETKF-Z', color=colors[4])
+plt.plot(nem, t_lmetkf_no_loc, marker='o', label='LMETKF-noLoc', color=colors[2])
+plt.plot(nem, t_lmetkf, marker='o', label='LMETKF', color=colors[3])
+plt.plot(nem, t_lmetkf_zloc, marker='o', label='LMETKF-Z', color=colors[4])
 
 plt.xscale('log')
 plt.xticks(nem, labels=[str(n) for n in nem])
@@ -173,9 +173,9 @@ plt.show()
 filters = [
     ("LETKF", rmse_b_letkf, sprd_b_letkf),
     ("GETKF", rmse_b_getkf, sprd_b_getkf),
-    ("MLETKF-noLoc", rmse_b_lmetkf_no_loc, sprd_b_lmetkf_no_loc),
-    ("MLETKF", rmse_b_lmetkf, sprd_b_lmetkf),
-    ("MLETKF-Z", rmse_b_lmetkf_zloc, sprd_b_lmetkf_zloc),
+    ("LMETKF-noLoc", rmse_b_lmetkf_no_loc, sprd_b_lmetkf_no_loc),
+    ("LMETKF", rmse_b_lmetkf, sprd_b_lmetkf),
+    ("LMETKF-Z", rmse_b_lmetkf_zloc, sprd_b_lmetkf_zloc),
 ]
 
 fig, axes = plt.subplots(2, 3, figsize=(10, 10), sharex=True)
