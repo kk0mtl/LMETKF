@@ -1185,7 +1185,7 @@ if __name__ == "__main__":
     nem_list = [50]
 
     cov_loc_dist = 3                                # background covariance localization distance
-    cov_loc_dist_pert = 3                         # for Z-loc perturbation (Set to None if Z-loc is not used)
+    cov_loc_dist_pert = None                           # for Z-loc perturbation (Set to None if Z-loc is not used)
 
     #obs_loc_dist = np.arange(1,11,1).tolist()       # for LETKF and LMETKF (with modulated ensemble)                             
     obs_loc_dist = [1.5]                             # observation localization distance
@@ -1193,7 +1193,7 @@ if __name__ == "__main__":
     #row_rank_thresh =np.arange(0.1,1.0,0.1).tolist()  # for localization matrix
     row_rank_thresh = [0.8]
 
-    mpi = False
+    mpi = True
     
     for h_type in [2]:                               # 0: linear, 1: nonlinear (absolute value), 2: nonlinear (natural log)
         for nobs in [40]:                           # number of observations
