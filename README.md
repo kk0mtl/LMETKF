@@ -4,7 +4,7 @@ This repository provides the code used for the Lorenz-96 data assimilation exper
 
 **An Improved Local Ensemble Transform Kalman Filter with Model Space Covariance Localization**
 
-The materials include the Lorenz-96 model code, implementations of the LETKF, GETKF, LMETKF, LMETKF-Z, and LMETKF-noLoc algorithms, processed experimental outputs, and Python scripts for analyzing the results and generating the figures. The experiments used synthetic observations generated from the Lorenz-96 nature run; no external observational datasets were used.
+The available files include include the Lorenz-96 model code, implementations of the LETKF, GETKF, LMETKF, LMETKF-Z, and LMETKF-noLoc algorithms, processed experimental outputs, and Python scripts for analyzing the results and generating the figures. The experiments used synthetic observations generated from the Lorenz-96 nature run; no external observational datasets were used.
 
 ## Figure generation
 
