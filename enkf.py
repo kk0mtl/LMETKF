@@ -1,6 +1,5 @@
 import numpy as np
 import sys
-#from numpy.linalg import eigh # scipy.linalg.eigh broken on my mac
 from scipy.linalg import eigh, cho_solve, cho_factor, svd, pinvh, solve_triangular, cholesky
 import scipy.stats as stats
 

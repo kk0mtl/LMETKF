@@ -909,8 +909,8 @@ class L96enkf:
                     # 4) plot: covariance (x vs x)
                     #---------------------------------------------------------------------------------------------------------------------------                            
                     self.plt.figure()
-                    self.plt.plot(np.arange(self.N),xxcov_b_mean,color='r',label='Cov (ens)')               # color='C1'
-                    self.plt.plot(np.arange(self.N),xxcov_b,color='g',label='Cov (truth)')                   # color='C2'
+                    self.plt.plot(np.arange(self.N),xxcov_b_mean,color='r',label='Covariance (ens)')               # color='C1'
+                    self.plt.plot(np.arange(self.N),xxcov_b,color='g',label='Error')                   # color='C2'
                     self.plt.xlim(0,self.N)
                     self.plt.legend(loc='upper right')
 
@@ -1108,7 +1108,7 @@ class L96enkf:
                         np.savetxt(os.path.join(self.plot_data_outdir,'{}.txt'.format(fn)), self.h)                        
                    
 if __name__ == "__main__":
-        # save background RMSE data for plot figure 3, 4, 5
+    # save background RMSE *.npz files
     def save_rmse_b(obj, tag, outdir="./", save_txt=True):
         its = np.asarray(obj.t_acc, dtype=int)
         msd_b = np.asarray(obj.xmsd_b_acc, dtype=float)
@@ -1130,39 +1130,11 @@ if __name__ == "__main__":
             np.savetxt(txt_path, data, fmt=["%d", "%.10e"], header="step rmse_b")
             print(f"[Saved] {txt_path}")
 
-    # plot background RMSE for figure 3, 4, 5
-    def plot_state_timeseries(obj, var_idx=0):
-        ftname = "GETKF"
+    # plot the domain-average background state estimates
+    def plot_state_mean_timeseries(obj, ft, color, t_start=3000, t_end=4000):
+        ftname = ft
         save = True
-        g_color = "tab:blue"
-        its = np.asarray(obj.t_acc)
-        x_true = np.asarray(obj.x_truth_acc)   
-        x_a    = np.asarray(obj.xmean_a_acc)   
-        x_b    = np.asarray(obj.xmean_b_acc)  
-
-        m = (its >= 3000) & (its <= 4000)
-        t = its[m]
-
-        plt.figure(figsize=(12, 2.5))
-        plt.plot(t, x_true[m, var_idx], color="black", linewidth=1.5)
-        plt.plot(t, x_b[m, var_idx], color=g_color, label=ftname, linestyle="--", linewidth=1.5)
-
-        plt.xlabel("Time steps")
-        plt.ylabel("x")
-        plt.yticks([-5, 0, 5, 10])
-        plt.grid(True, alpha=0.3)
-        plt.legend(loc="upper right")
-        plt.tight_layout()
-
-        if save:
-            fname = f"state_var{var_idx}.png"
-            plt.savefig(f"./{fname}", dpi=400, bbox_inches="tight")
-            print(f"[Saved] ./{fname}")  
-
-    def plot_state_mean_timeseries(obj, t_start=3000, t_end=4000):
-        ftname = "LETKF"
-        save = True
-        g_color = "tab:pink"
+        g_color = color
 
         its = np.asarray(obj.t_acc)
         x_true = np.asarray(obj.x_truth_acc)
@@ -1239,10 +1211,26 @@ if __name__ == "__main__":
                             start_time = time.time()
                             object.fcst_and_da()    
 
-                            # save background RMSE data for plot figure 3, 6, 7
-                            #save_rmse_b(object, tag="CASE3_GETKF_Z_Ne50", outdir="./", save_txt=True)
+                            # ===============================================================
+                            # save background RMSE *.npz files for plot (f) of Figs. 3, 6, and 7
+                            # The generated files can be plotted using fig_rmse_timestep.py
+                            # ===============================================================
+                            #save_rmse_b(object, tag="CASE3_GETKF_Z_Ne50", outdir="./rmse_npz", save_txt=True)
 
-                            # plot the domain-average dbackground state estimates figure 3, 6, 7
-                            #plot_state_timeseries(object, var_idx=1)
+                            # ===============================================================
+                            # plot (a-e) of Figs. 3, 6, and 7 
+                            # the domain-average background state estimates
+
+                            # ft: filter type 
+                            # [LETKF], [GETKF], [LMETKF], [LMETKF-Z], [LMETKF-noLoc]
+
+                            # color: color of curves for each filter type
+                            # [LETKF] tab:pink, 
+                            # [GETKF] tab:blue, 
+                            # [LMETKF] tab:green,
+                            # [LMETKF-Z] tab:red, 
+                            # [LMETKF-noLoc] tab:orange
+                            # ===============================================================
+                            # plot_state_mean_timeseries(object, ft="LETKF", color="tab:pink", t_start=3000, t_end=4000)
 
                             object.show_perf(start_time)
